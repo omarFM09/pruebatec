@@ -2,25 +2,19 @@ version: '3'
 
 services:
   node_app:
-    image: node:14
     container_name: node_container
-    working_dir: /app
-    volumes:
-      - ./app:/app
+    restart: always
+    build: .
     ports:
-      - "3000:3000"
-    networks:
-      - my_network
+      - "5000:3000"
+    links:
+      - mongodb
+    volumes:
+      - .:/usr/src/app
 
   mongodb:
-    image: mongo:latest
+    image: mongo
     container_name: mongo_container
-    volumes:
-      - ./data:/data/db
     ports:
       - "27017:27017"
-    networks:
-      - my_network
 
-networks:
-  my_network:
