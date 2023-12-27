@@ -1,45 +1,70 @@
-function findSubstring(s, words) {
-    const result = [];
-    const wordLen = words[0].length;
-    const totalLen = wordLen * words.length;
-  
-    if (s.length < totalLen) {
-      return result;
-    }
-  
-    const wordCountMap = {};
-    for (const word of words) {
-      wordCountMap[word] = (wordCountMap[word] || 0) + 1;
-    }
-  
-    for (let i = 0; i <= s.length - totalLen; i++) {
-      const substring = s.substr(i, totalLen);
-      const wordSeenMap = {};
-  
-      for (let j = 0; j < totalLen; j += wordLen) {
-        const word = substring.substr(j, wordLen);
-        wordSeenMap[word] = (wordSeenMap[word] || 0) + 1;
-      }
-  
-      if (isPermutation(wordCountMap, wordSeenMap)) {
-        result.push(i);
+const readline = require('readline');
+
+function simulateLCR(players, rolls) {
+  const chips = new Array(players).fill(3);
+  let centerChips = 0;
+  let currentPlayer = 0;
+
+  for (let roll of rolls) {
+    if (chips[currentPlayer] > 0) {
+      switch (roll) {
+        case 'L':
+          chips[currentPlayer]--;
+          chips[(currentPlayer + players - 1) % players]++;
+          break;
+        case 'C':
+          chips[currentPlayer]--;
+          centerChips++;
+          break;
+        case 'R':
+          chips[currentPlayer]--;
+          chips[(currentPlayer + 1) % players]++;
+          break;
       }
     }
-  
-    return result;
+
+    currentPlayer = (currentPlayer + 1) % players;
   }
-  
-  function isPermutation(map1, map2) {
-    for (const key in map1) {
-      if (map1[key] !== map2[key]) {
-        return false;
-      }
-    }
-    return true;
+
+  const winner = chips.findIndex((count) => count > 0);
+  const currentPlayerStr = winner !== -1 ? `(${winner + 1}(W))` : `(*)`;
+
+  return {
+    chips,
+    centerChips,
+    currentPlayerStr,
+  };
+}
+
+function printGameState(gameNumber, players, state) {
+  console.log(`Game ${gameNumber}:`);
+  for (let i = 0; i < players; i++) {
+    const suffix = i === state.chips.findIndex((count) => count > 0) ? state.currentPlayerStr : '';
+    console.log(`Player ${i + 1}:${state.chips[i]}${suffix}`);
   }
-  
-  // Ejemplos de uso
-  console.log(findSubstring("barfoothefoobarman", ["foo", "bar"])); // Output: [0, 9]
-  console.log(findSubstring("wordgoodgoodgoodbestword", ["word", "good", "best", "word"])); // Output: []
-  console.log(findSubstring("barfoofoobarthefoobarman", ["bar", "foo", "the"])); // Output: [6, 9, 12]
-  //require('./database');
+  console.log(`Center:${state.centerChips}`);
+}
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+let gameNumber = 1;
+
+function processInput(line) {
+  const [players, rolls] = line.split(' ');
+  if (players === '0') {
+    rl.close();
+    return;
+  }
+
+  const state = simulateLCR(parseInt(players), rolls);
+  printGameState(gameNumber, parseInt(players), state);
+  console.log(); // Separate test cases with a blank line
+  gameNumber++;
+
+  rl.question('', processInput);
+}
+
+rl.question('', processInput);
